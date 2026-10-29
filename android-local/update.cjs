@@ -3,7 +3,7 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {spawnSync}=require('node:child_process');
 const ROOT=__dirname;
-const BASE=['index.html','Code.gs','server.cjs','storage.cjs','recover-admin.cjs','stop-server.cjs','control-server.cjs','local-control.cjs','install-shortcuts.cjs','mdns-local.cjs','package.json','package-lock.json','INSTALACION-MANUAL.md','update.cjs','update-config.json','release.json','verify-release.cjs'];
+const BASE=['index.html','Code.gs','server.cjs','storage.cjs','recover-admin.cjs','stop-server.cjs','control-server.cjs','local-control.cjs','install-shortcuts.cjs','mdns-local.cjs','package.json','package-lock.json','update.cjs','update-config.json','release.json','verify-release.cjs'];
 function validName(n){return BASE.includes(n)||(/^node_modules\/[a-zA-Z0-9@_.\/-]+$/.test(n)&&!n.split('/').some(s=>s==='..'||s==='.'||s===''));}
 async function download(url,limit,signal){
   if(new URL(url).protocol!=='https:')throw Error('La descarga requiere HTTPS.');

@@ -7,3 +7,4 @@ dist/
 .update-journal.json
 .start-lock/
 server.pid
+PUBLICAR-ACTUALIZACION.md

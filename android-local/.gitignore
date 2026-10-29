@@ -1,0 +1,9 @@
+data/
+node_modules/
+tools/
+*.log
+dist/
+.update-*/
+.update-journal.json
+.start-lock/
+server.pid

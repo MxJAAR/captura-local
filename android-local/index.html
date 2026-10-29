@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172b4d;
+        --muted: #62718a;
+        --brand: #2457c5;
+        --brand-dark: #193e91;
+        --surface: #fff;
+        --canvas: #f3f6fb;
+        --border: #dce3ee;
+        --danger: #b42318;
+        --success: #137547;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font: 15px/1.45 Arial, sans-serif;
+      }
+      button, input, select, textarea { font: inherit; }
+      button { cursor: pointer; }
+      .shell { max-width: 1120px; margin: 0 auto; padding: 28px 20px 48px; }
+      .topbar, .row, .panel-heading, .entry-actions, .toolbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      }
+      .topbar { margin-bottom: 22px; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 4px; font-size: clamp(24px, 4vw, 32px); }
+      h2 { font-size: 20px; margin-bottom: 16px; }
+      h3 { font-size: 16px; margin-bottom: 10px; }
+      .subtitle, .muted { color: var(--muted); }
+      .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 22px; box-shadow: 0 5px 18px #172b4d0a;
+      }
+      .stack { display: grid; gap: 18px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .catalog-panels > .card { align-content: start; min-width: 0; }
+      .catalog-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+      .catalog-toolbar .muted { font-size: 12px; }
+      .catalog-select { width: 44px; }
+      .catalog-select input { width: 20px; height: 20px; min-height: 20px; accent-color: var(--brand); cursor: pointer; }
+      tr.catalog-selected { background: #eef4ff; }
+      #confirm-message { max-height: 40vh; overflow-y: auto; overflow-wrap: anywhere; }
+      .field { display: grid; gap: 6px; }
+      label { font-weight: 700; font-size: 13px; }
+      input, select, textarea {
+        width: 100%; min-height: 42px; padding: 9px 11px;
+        border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: var(--ink);
+      }
+      textarea { min-height: 96px; resize: vertical; }
+      input:focus, select:focus, textarea:focus { outline: 3px solid #2457c526; border-color: var(--brand); }
+      .button {
+        display: inline-flex; justify-content: center; align-items: center; gap: 7px;
+        min-height: 40px; padding: 8px 14px; border: 1px solid transparent;
+        border-radius: 8px; background: var(--brand); color: white; font-weight: 700;
+      }
+      .button:hover { background: var(--brand-dark); }
+      .button.secondary { background: white; color: var(--ink); border-color: var(--border); }
+      .button.secondary:hover { background: #f6f8fc; }
+      .button.danger { background: var(--danger); }
+      .button.small { min-height: 32px; padding: 5px 9px; font-size: 13px; }
+      .button:disabled { opacity: .55; cursor: wait; }
+      .tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+      .tab {
+        border: 0; border-bottom: 3px solid transparent; background: transparent;
+        padding: 10px 12px; color: var(--muted); font-weight: 700;
+      }
+      .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+      .notice { padding: 11px 13px; border-radius: 8px; background: #eef4ff; color: #244780; }
+      .notice.warning { background: #fff5e5; color: #7a4a00; }
+      .notice.error { background: #fff0ef; color: var(--danger); }
+      .notice.success { background: #eaf7ef; color: var(--success); }
+      .hidden { display: none !important; }
+      .wide-field { grid-column: 1 / -1; }
+      .locked-panel { border: 1px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; color: var(--muted); }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { text-align: left; padding: 11px 9px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+      th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+      .status { display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+      .status.on { background: #e8f6ed; color: var(--success); }
+      .status.off { background: #fff0ef; color: var(--danger); }
+      .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+      .capture-key-settings { display: flex; align-items: end; gap: 8px; max-width: 410px; }
+      .capture-key-settings .field { min-width: 160px; }
+      .trash-button { min-width: 34px; min-height: 34px; padding: 6px; background: #c62828; border-radius: 7px; }
+      .trash-button:hover { background: #9f1d1d; }
+      .trash-button svg { display: block; width: 18px; height: 18px; }
+      .confirm-overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: #172b4d99; }
+      .entry-overlay { position: fixed; inset: 0; z-index: 11; display: grid; place-items: center; padding: 16px; background: #172b4d99; }
+      .entry-dialog { width: min(100%, 460px); padding: 22px; background: white; border-radius: 14px; box-shadow: 0 12px 40px #172b4d44; }
+      .entry-dialog h2 { margin-bottom: 5px; }
+      .confirm-dialog { width: min(100%, 430px); padding: 24px; background: white; border-radius: 14px; box-shadow: 0 12px 40px #172b4d44; }
+      .confirm-dialog p { margin-bottom: 22px; color: var(--muted); }
+      .confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+      .progress { height: 9px; min-width: 90px; background: #e7edf6; border-radius: 9px; overflow: hidden; }
+      .progress span { display: block; height: 100%; background: #2a9d67; }
+      .check { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+      .check input { width: auto; min-height: 0; }
+      .empty { padding: 20px 8px; text-align: center; color: var(--muted); }
+      .quantity { max-width: 180px; }
+      .route-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 9px; }
+      .route-option {
+        min-height: 42px; padding: 9px 12px; border: 1px solid var(--border);
+        border-radius: 8px; background: white; color: var(--ink); font-weight: 700; text-align: left;
+      }
+      .route-option:hover:not(:disabled) { border-color: var(--brand); background: #f3f6ff; }
+      .route-option.completed { border-color: #9dd3b3; background: #e8f6ed; color: #137547; }
+      .route-option.pending { border-color: #e7c65c; background: #fff2b3; color: #755600; }
+      .route-option.pending.completed { border-color: #e7c65c; background: #fff2b3; color: #755600; }
+      .route-option.selected { outline: 2px solid var(--brand); outline-offset: 1px; }
+      .route-option.completed.selected { outline-color: #137547; }
+      .route-option:disabled { cursor: not-allowed; opacity: .65; }
+      .user-chip { color: var(--muted); font-size: 14px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .loader { position: fixed; inset: 0; display: grid; place-items: center; background: #f3f6fbd9; z-index: 20; cursor: wait; }
+      .loader-card { display: flex; align-items: center; gap: 13px; padding: 16px 20px; border-radius: 12px; background: white; box-shadow: 0 4px 20px #172b4d22; font-weight: 700; }
+      .spinner { width: 24px; height: 24px; border: 3px solid #dce3ee; border-top-color: var(--brand); border-radius: 50%; animation: spin .75s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (max-width: 680px) {
+        .shell { width: min(100%, 520px); padding: 12px 9px 24px; }
+        .card { padding: 13px; border-radius: 11px; }
+        .stack { gap: 13px; }
+        .grid { grid-template-columns: 1fr; gap: 12px; }
+        h2 { font-size: 18px; margin-bottom: 12px; }
+        .tabs { margin-bottom: 12px; }
+        .route-options { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
+        .route-option { min-height: 38px; padding: 7px 9px; font-size: 13px; }
+        .entry-dialog { padding: 17px; }
+        .topbar { align-items: flex-start; }
+        .row.mobile-column { align-items: stretch; flex-direction: column; }
+        .admin-toolbar, .capture-key-settings { align-items: stretch; flex-direction: column; }
+        .capture-key-settings { max-width: none; }
+        th, td { padding: 9px 7px; }
+      }
+    
+      .loader { position: static; padding: 8px; background: transparent; cursor: default; }
+      .loader-card { justify-content: center; padding: 8px; box-shadow: none; font-size: 14px; }
+      .spinner { width: 18px; height: 18px; }
+      .inline-status { min-height: 24px; color: var(--muted); font-size: 13px; }
+      .button, .button.small, .trash-button, .route-option { min-height: 44px; }
+      .route-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .route-option > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+      .route-icons { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+      .route-icons svg { width: 17px; height: 17px; }
+      .queue-banner { border: 1px solid #e7c65c; border-radius: 8px; background: #fff9e8; color: #755600; }
+      .queue-banner > summary { padding: 10px 12px; cursor: pointer; font-weight: 700; }
+      .queue-banner > summary span { font-weight: 400; }
+      .queue-banner .queue-hint { display: inline; margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--muted); }
+      #queue-list { padding: 0 12px 8px; max-height: 240px; overflow-y: auto; }
+      .queue-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #eadfbd; font-size: 13px; }
+      .queue-item .actions { flex-shrink: 0; }
+      .queue-item .button { font-size: 12px; padding: 5px 8px; }
+      .queue-description { min-width: 0; overflow-wrap: anywhere; }
+      .queue-description small { display: block; }
+      .row-menu { min-width: 44px; }
+      .row-menu summary { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); border-radius: 8px; color: var(--brand); list-style: none; }
+      .row-menu summary::-webkit-details-marker { display: none; }
+      .row-menu summary svg { width: 19px; height: 19px; }
+      .row-menu[open] summary { background: #eef4ff; margin-bottom: 6px; }
+      .row-menu .actions { flex-wrap: nowrap; }
+      #history-container table, #admin-entries-container table { width: 100%; }
+      #history-container td:last-child { width: 1%; }
+      .pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+      .page-info { display: grid; gap: 4px; text-align: center; }
+      #history-page-loading { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); font-size: 12px; }
+      #history-page-error { color: var(--danger); font-size: 12px; }
+      #admin-entries-container { max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
+      #admin-entries-container th { position: sticky; top: 0; background: var(--surface); }
+      .entry-overlay { inset: auto 0 auto; top: var(--entry-viewport-top, 0px); height: var(--entry-viewport-height, 100dvh); }
+      .entry-dialog { max-height: calc(var(--entry-viewport-height, 100dvh) - 32px); overflow-y: auto; }
+      #entry-form .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #entry-form .field { min-width: 0; }
+      #entry-form input { max-width: none; font-size: 16px; }
+      .entry-context { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+      .entry-context .subtitle { margin: 0; }
+      .completion-check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; white-space: nowrap; font-size: 13px; }
+      #route-complete { width: 18px; min-height: 18px; height: 18px; margin: 0; accent-color: var(--success); }
+      #completion-status { color: var(--muted); font-size: 12px; }
+      @media (max-width: 680px) {
+        #history-container table, #admin-entries-container table { table-layout: fixed; font-size: 12px; }
+        #history-container th, #history-container td,
+        #admin-entries-container th, #admin-entries-container td { padding: 6px 3px; overflow-wrap: anywhere; }
+        #history-container th, #admin-entries-container th { font-size: 10px; letter-spacing: 0; }
+        #history-container th:first-child, #admin-entries-container th:first-child { width: 45px; }
+        #history-container th:nth-child(4), #history-container th:nth-child(5),
+        #admin-entries-container th:nth-child(4), #admin-entries-container th:nth-child(5) { width: 33px; }
+        #history-container th:last-child { width: 50px; }
+        #history-container td:first-child, #admin-entries-container td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .row-menu .actions { flex-direction: column; }
+        .row-menu .actions .button { width: 44px; padding: 4px 1px; font-size: 10px; }
+        /* Apps Script's iframe may retain its full height when the keyboard opens. */
+        .entry-overlay { align-items: start; padding: 10px; overflow-y: auto; }
+        .entry-dialog { max-height: calc(var(--entry-viewport-height, 100dvh) - 20px); gap: 12px; }
+        .entry-dialog .subtitle { margin-bottom: 0; }
+        .panel-heading { flex-wrap: wrap; }
+      }
+      @media (max-height: 500px) {
+        .entry-overlay { align-items: start; padding: 10px; overflow-y: auto; }
+        .entry-dialog { gap: 10px; padding: 14px; }
+        .entry-dialog .subtitle { margin-bottom: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loader" class="loader hidden" role="status" aria-live="polite">
+      <div class="loader-card"><span class="spinner" aria-hidden="true"></span><span id="loader-message">Procesando…</span></div>
+    </div>
+    <div id="confirm-overlay" class="confirm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="confirm-dialog">
+        <h2 id="confirm-title">Confirmar eliminación</h2>
+        <p id="confirm-message"></p>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" class="button secondary" type="button">Cancelar</button>
+          <button id="confirm-delete" class="button danger" type="button">Eliminar</button>
+        </div>
+      </div>
+    </div>
+    <div id="entry-overlay" class="entry-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="entry-title">
+      <form id="entry-form" class="entry-dialog stack" autocomplete="off">
+        <div>
+          <h2 id="entry-title">Registrar cantidades</h2>
+          <div class="entry-context">
+            <p id="entry-route-name" class="subtitle"></p>
+            <label class="completion-check"><input id="route-complete" type="checkbox" disabled>Ruta Completa</label>
+            <span id="completion-status" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+        <span id="edit-hint" class="muted hidden">Editando la captura seleccionada.</span>
+        <div class="grid">
+          <div class="field">
+            <label for="mta-input">Cantidad MTA</label>
+            <input id="mta-input" class="quantity" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" pattern="[0-9]{1,3}" maxlength="3" placeholder="0–999" disabled>
+          </div>
+          <div class="field">
+            <label for="mtb-input">Cantidad MTB</label>
+            <input id="mtb-input" class="quantity" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" pattern="[0-9]{1,3}" maxlength="3" placeholder="0–999" disabled>
+          </div>
+        </div>
+        <div class="confirm-actions">
+          <button id="cancel-edit" class="button secondary" type="button">Cancelar</button>
+          <button id="save-entry" class="button" type="submit" disabled>Enviar captura</button>
+        </div>
+      </form>
+    </div>
+    <main id="app-view" class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Captura MTA / MTB</h1>
+          <div id="welcome" class="user-chip">Captura bloqueada · Ingresa tu CaptureKey para comenzar.</div>
+        </div>
+        <button id="logout-button" class="button secondary hidden" type="button">Cerrar sesión</button>
+      </header>
+      <nav id="tabs" class="tabs">
+        <button class="tab active" data-tab="capture" type="button">Captura</button>
+        <button id="admin-tab" class="tab" data-tab="admin" type="button">Administración</button>
+      </nav>
+      <div id="app-message" aria-live="polite"></div>
+
+      <section id="capture-gate" class="card stack">
+          <div>
+            <h2>Acceso a captura</h2>
+            <p class="subtitle">Ingresa la CaptureKey compartida para continuar.</p>
+          </div>
+          <form id="capture-access-form" class="row mobile-column">
+            <div class="field" style="flex:1">
+              <label for="capture-key">CaptureKey</label>
+              <input id="capture-key" type="password" autocomplete="off" required>
+            </div>
+            <button class="button" type="submit">Validar CaptureKey</button>
+          </form>
+      </section>
+
+      <section id="admin-gate" class="card stack hidden">
+          <div>
+            <h2>Acceso de administrador</h2>
+            <p class="subtitle">Inicia sesión para acceder al panel de administración.</p>
+          </div>
+          <form id="admin-login-form" class="grid">
+            <div class="field">
+              <label for="login-user">Usuario</label>
+              <input id="login-user" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label for="login-password">Contraseña</label>
+              <input id="login-password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="button wide-field" type="submit">Validar acceso de administrador</button>
+          </form>
+      </section>
+
+      <section id="capture-panel" class="stack hidden">
+        <div id="capture-sync" class="inline-status" role="status" aria-live="polite"></div>
+        <details id="queue-panel" class="queue-banner hidden"><summary>Rutas pendientes de envío <span id="queue-count" aria-live="polite"></span><small class="queue-hint">Puede tardar varios segundos</small></summary><div id="queue-list"></div></details>
+        <div id="capture-paused" class="notice warning hidden">La captura está pausada por el administrador. Puedes consultar el historial.</div>
+        <div class="card stack">
+        
+          <div class="field">
+            <label for="line-select">Línea</label>
+            <div id="line-prompt" class="notice hidden" role="status">¿Qué línea vas a usar? Selecciona una para comenzar.</div>
+            <select id="line-select" aria-describedby="line-prompt" required disabled><option value="" disabled hidden>Selecciona una línea</option></select>
+          </div>
+          <div class="field">
+            <label id="route-label">Ruta</label>
+            <div id="route-options" class="route-options" role="listbox" aria-labelledby="route-label"></div>
+            <span class="muted">El fondo verde indica Ruta Completa en esta línea.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="panel-heading">
+            <div><h2>Últimas capturas de la línea</h2><p class="subtitle">Se muestran hasta las 30 entradas más recientes de la línea seleccionada.</p></div>
+          </div>
+          <div id="history-container" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <section id="admin-panel" class="stack hidden"><div id="admin-sync" class="inline-status" role="status" aria-live="polite"></div>
+        <div id="admin-content" class="stack">
+        <details class="card">
+          <summary><strong>Cuenta del administrador</strong></summary>
+          <p class="subtitle">Cambia tu usuario o contraseña desde este dispositivo. Al guardar, tendrás que iniciar sesión de nuevo y se cerrarán los demás accesos de esta cuenta. La CaptureKey no cambia.</p>
+          <form id="admin-account-form" class="grid" style="max-width: 520px; margin-top: 16px">
+            <div class="field">
+              <label for="account-user">Nuevo usuario (opcional)</label>
+              <input id="account-user" type="text" minlength="3" maxlength="64" pattern="[a-zA-Z0-9._\-]{3,64}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Déjalo vacío para conservar el usuario">
+            </div>
+            <div class="field">
+              <label for="account-current">Contraseña actual</label>
+              <input id="account-current" type="password" required maxlength="128" autocomplete="current-password">
+            </div>
+            <div class="field">
+              <label for="account-new">Nueva contraseña (opcional, mínimo 6 caracteres)</label>
+              <input id="account-new" type="password" minlength="6" maxlength="128" autocomplete="new-password">
+            </div>
+            <div class="field">
+              <label for="account-confirm">Repetir nueva contraseña</label>
+              <input id="account-confirm" type="password" maxlength="128" autocomplete="new-password">
+            </div>
+            <label class="check"><input id="account-show" type="checkbox"> Mostrar contraseñas</label>
+            <button id="account-save" class="button" type="submit">Guardar acceso del administrador</button>
+            <p id="account-message" role="status" aria-live="polite"></p>
+          </form>
+        </details>
+
+        <div class="card stack">
+          <div class="admin-toolbar">
+            <div>
+              <h2>Control de captura</h2>
+              <p class="subtitle">Pausar impide nuevas capturas y ediciones.</p>
+              <label class="check"><input id="capture-toggle" type="checkbox"> Permitir capturas</label>
+            </div>
+            <form id="capture-key-form" class="capture-key-settings">
+              <div class="field">
+                <label for="capture-key-setting">CaptureKey compartida</label>
+                <input id="capture-key-setting" type="text" maxlength="100" autocomplete="off">
+              </div>
+              <button class="button small" type="submit">Guardar clave</button>
+            </form>
+          </div>
+          <div class="row mobile-column">
+            <span class="muted">El reinicio elimina las capturas registradas, pero conserva líneas y rutas.</span>
+            <button id="reset-button" class="button danger" type="button">Reiniciar captura total</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="panel-heading">
+            <div><h2>Progreso por línea</h2><p class="subtitle">Solo cuentan las rutas marcadas como completas.</p></div>
+            <button id="export-button" class="button secondary" type="button">Exportar totales CSV</button>
+          </div>
+          <div id="progress-container" class="table-wrap"></div>
+        </div>
+
+        <div class="card">
+          <h2>Totales por ruta</h2>
+          <p class="subtitle">MTA y MTB sumados entre todas las líneas para cada ruta común.</p>
+          <div id="totals-container" class="table-wrap"></div>
+        </div>
+
+        <div class="card stack">
+          <div>
+            <h2>Historial completo de capturas</h2>
+            <p class="subtitle">Consulta las entradas registradas y filtra por línea, ruta o ambas. Debido algunas limitaciones, ciertas acciones tardarán en aplicarse.</p>
+          </div>
+          <div class="grid">
+            <div class="field">
+              <label for="admin-entry-line">Filtrar por línea</label>
+              <select id="admin-entry-line"><option value="">Todas las líneas</option></select>
+            </div>
+            <div class="field">
+              <label for="admin-entry-route">Filtrar por ruta</label>
+              <select id="admin-entry-route"><option value="">Todas las rutas</option></select>
+            </div>
+          </div>
+          <div id="admin-entries-container" class="table-wrap"></div>
+          <div class="pagination">
+            <button id="page-prev" class="button secondary" type="button">Anterior</button>
+            <div class="page-info"><span id="page-label"></span><span id="history-page-loading" class="hidden" role="status"><span class="spinner" aria-hidden="true"></span>Cargando historial…</span><span id="history-page-error" role="status"></span></div>
+            <button id="page-next" class="button secondary" type="button">Siguiente</button>
+          </div>
+        </div>
+
+        <div class="grid catalog-panels">
+          <div class="card stack">
+            <div>
+              <h2>Líneas disponibles</h2>
+              <p class="subtitle">Las líneas están disponibles para captura. Eliminar una línea no borra su historial.</p>
+            </div>
+            <form id="line-form" class="stack">
+              <input id="line-id" type="hidden">
+              <div class="field">
+                <label for="line-name">Nombres de línea</label>
+                <textarea id="line-name" maxlength="5000" placeholder="Ejemplo: Línea 1, Línea 2&#10;Línea 3" required></textarea>
+                <span class="muted">Agrega una o varias líneas separadas por comas o saltos de línea.</span>
+              </div>
+              <div class="actions">
+                <button class="button" type="submit">Guardar línea</button>
+                <button id="edit-line" class="button secondary" type="button" data-catalog-edit="line" aria-pressed="false">Editar</button>
+              </div>
+            </form>
+            <div id="lines-container" class="table-wrap"></div>
+          </div>
+
+          <div class="card stack">
+            <div>
+              <h2>Rutas disponibles</h2>
+              <p class="subtitle">El catálogo de rutas es común a todas las líneas. Eliminar una ruta no borra su historial.</p>
+            </div>
+            <form id="route-form" class="stack">
+              <input id="route-id" type="hidden">
+              <div class="field">
+                <label for="route-name">Nombres de ruta</label>
+                <textarea id="route-name" maxlength="5000" placeholder="Ejemplo: Ruta 1, Ruta 2&#10;Ruta 3" required></textarea>
+                <span class="muted">Agrega una o varias rutas separadas por comas o saltos de línea.</span>
+              </div>
+              <div class="actions">
+                <button class="button" type="submit">Guardar ruta</button>
+                <button id="edit-route" class="button secondary" type="button" data-catalog-edit="route" aria-pressed="false">Editar</button>
+              </div>
+            </form>
+            <div id="routes-container" class="table-wrap"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = { token: '', username: '', role: '', authenticated: false, activeTab: 'capture', captureClientId: '', lines: [], routes: [], selectedLine: '', selectedRoute: '', history: [], routeIdsWithEntries: [], routeTotals: null, pendingRouteIds: {}, adminEntries: [], lastCatalogAdded: 0, editing: null, captureEnabled: true, adminRefreshRunning: false, pendingDelete: null };
+      Object.assign(state, { epoch: '', captureVersion: '', adminVersion: '', adminPage: 1, adminPages: 1, queueRunning: false, actionCount: 0, lastInteraction: Date.now(), captureRequest: 0, adminRequest: 0 });
+      const $ = function (id) { return document.getElementById(id); };
+
+      function getCaptureClientId() {
+        let clientId = localStorage.getItem('capturaClientId');
+        if (!clientId || !/^[a-f0-9-]{16,80}$/i.test(clientId)) {
+          clientId = window.crypto && window.crypto.randomUUID
+            ? window.crypto.randomUUID()
+            : Date.now().toString(16) + '-' +
+              ('00000000' + Math.floor(Math.random() * 0x100000000).toString(16)).slice(-8) + '-' +
+              ('00000000' + Math.floor(Math.random() * 0x100000000).toString(16)).slice(-8);
+          localStorage.setItem('capturaClientId', clientId);
+        }
+        return clientId;
+      }
+
+      function newOperationId() {
+        if (typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+        const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+        bytes[6] = (bytes[6] & 15) | 64;
+        bytes[8] = (bytes[8] & 63) | 128;
+        const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+        return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+      }
+
+      function callServer(name, ...args) {
+        if (!['login', 'authorizeCaptureKey', 'logout'].includes(name) && expireAdminIfNeeded()) {
+          return Promise.reject(new Error('Tu sesión de administrador expiró. Inicia sesión nuevamente.'));
+        }
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        return fetch('/api', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: name, args }), signal: controller.signal
+        }).then(async response => {
+          const data = await response.json();
+          if (!response.ok || data.error) throw new Error(data.error || 'Error de conexión local.');
+          return data.result;
+        }).catch(error => {
+          if (error.name === 'AbortError') throw new Error('El servidor local tardó en responder. Se reintentará el envío pendiente.');
+          throw error;
+        }).finally(() => clearTimeout(timeout));
+      }
+
+      function setLoading(loading, message) {
+        $('loader').classList.toggle('hidden', !loading);
+        if (loading && message) $('loader-message').textContent = message;
+      }
+
+      function showMessage(target, text, type) {
+        const node = $(target);
+        node.textContent = text;
+        node.className = text ? 'notice ' + (type || '') : '';
+      }
+
+      async function runAction(action, messageTarget, loadingMessage) {
+        state.captureRequest++; state.adminRequest++;
+        const active = document.activeElement;
+        const scope = active && (active.closest('form') || active.closest('.card'));
+        const controls = scope ? Array.from(scope.querySelectorAll('button, input, select, textarea')).filter(el => !el.disabled) : [];
+        const indicator = document.createElement('div');
+        indicator.className = 'inline-status'; indicator.setAttribute('role', 'status');
+        indicator.textContent = loadingMessage || 'Guardando cambios…';
+        if (scope) scope.appendChild(indicator); else setLoading(true, indicator.textContent);
+        controls.forEach(el => { el.disabled = true; });
+        state.actionCount++;
+        try { return await action(); }
+        catch (error) { showMessage(messageTarget || 'app-message', error.message, 'error'); throw error; }
+        finally {
+          state.actionCount--; indicator.remove(); controls.forEach(el => { el.disabled = false; });
+          if (!state.actionCount) setLoading(false);
+          applyCaptureControls();
+        }
+      }
+
+      function renderSelect(select, placeholder, options, selected) {
+        const placeholderOption = new Option(placeholder, '');
+        if (select.id === 'line-select') {
+          placeholderOption.disabled = true;
+          placeholderOption.hidden = true;
+        }
+        select.replaceChildren(placeholderOption);
+        options.forEach(function (item) {
+          const option = new Option(item.label, item.value);
+          select.add(option);
+        });
+        select.value = selected || '';
+      }
+
+      function renderCapture(data) {
+        applyStatus(data);
+        state.captureVersion = data.version;
+        state.lines = data.lines;
+        state.routes = data.routes;
+        state.selectedLine = data.selectedLine;
+        if (data.selectedLine) localStorage.setItem('capturaSelectedLine', data.selectedLine);
+        else localStorage.removeItem('capturaSelectedLine');
+        if ($('entry-overlay').classList.contains('hidden')) state.selectedRoute = '';
+        state.history = data.history;
+        const routeTotals = data.routeTotals;
+        state.routeTotals = routeTotals && typeof routeTotals === 'object' && !Array.isArray(routeTotals) &&
+          Object.keys(routeTotals).every(function (routeId) {
+            const totals = routeTotals[routeId];
+            return totals && Number.isFinite(totals.mta) && Number.isFinite(totals.mtb);
+          }) ? routeTotals : null;
+        state.totalsStale = false;
+        state.totalsUnavailable = !state.routeTotals;
+        if (state.totalsUnavailable) {
+          showMessage('app-message', 'El servidor no devolvió los totales. Actualiza Code.gs e Index.html juntos y publica una nueva versión de la implementación.', 'warning');
+        }
+        state.routeIdsWithEntries = data.routeIdsWithEntries;
+        state.completedRouteIds = data.completedRouteIds || [];
+        state.completionAvailable = Array.isArray(data.completedRouteIds);
+        state.captureEnabled = data.captureEnabled;
+        state.authenticated = true;
+        $('welcome').textContent = state.role === 'admin'
+          ? 'Sesión: ' + state.username + ' · Administrador'
+          : 'Sesión de captura habilitada';
+        $('logout-button').classList.remove('hidden');
+        $('admin-tab').textContent = state.role === 'admin' ? 'Administración' : 'Administración 🔒';
+        $('capture-paused').classList.toggle('hidden', data.captureEnabled);
+        $('save-entry').disabled = !data.captureEnabled;
+        $('line-select').disabled = !data.captureEnabled || !!state.editing;
+        $('mta-input').disabled = !data.captureEnabled;
+        $('mtb-input').disabled = !data.captureEnabled;
+        renderSelect($('line-select'), 'Selecciona una línea', data.lines.map(function (line) {
+          return { label: line.name, value: line.name };
+        }), data.selectedLine);
+        renderRoutes();
+        renderHistory();
+        renderEntryContext();
+        renderAccessViews();
+        retryLegacyReceiptErrors();
+        renderQueue();
+        applyCaptureControls();
+        processQueue();
+      }
+
+      function renderRoutes() {
+        updatePendingRoutes();
+        const container = $('route-options');
+        const capturedRoutes = state.routeIdsWithEntries.reduce(function (completed, routeId) {
+          completed[routeId] = true;
+          return completed;
+        }, {});
+        let routes = state.routes.slice();
+        if (state.editing && !routes.some(function (route) { return route.id === state.editing.routeId; })) {
+          routes.push({ id: state.editing.routeId, name: state.editing.route, unavailable: true });
+        }
+        if (!routes.length) {
+          container.innerHTML = '<div class="empty">No hay rutas disponibles.</div>';
+          return;
+        }
+        const disabled = !state.authenticated || !state.captureEnabled || !state.selectedLine || !!state.editing;
+        container.innerHTML = routes.map(function (route) {
+          const selected = state.selectedRoute === route.id;
+          const completed = (state.completedRouteIds || []).includes(route.id);
+          const hasEntries = !!capturedRoutes[route.id];
+          const count = state.routeTotals && state.routeTotals[route.id] ? state.routeTotals[route.id].count || (hasEntries ? 1 : 0) : hasEntries ? 1 : 0;
+          const pending = !!state.pendingRouteIds[route.id];
+          const routeDisabled = disabled;
+          return '<button class="route-option' + (completed ? ' completed' : '') + (pending ? ' pending' : '') +
+            (selected ? ' selected' : '') + '" type="button" role="option" aria-selected="' + selected +
+            '" data-route-id="' + escapeHtml(route.id) + '"' + (routeDisabled ? ' disabled' : '') +
+            ' title="' + count + ' captura(s) en esta línea' + (completed ? ' · Ruta completa' : '') + (pending ? ' · Envíos pendientes' : '') +
+            '" aria-label="' + escapeHtml(route.name + ', ' + count + ' captura(s) en esta línea' + (completed ? ', ruta completa' : '') + (pending ? ', ' + state.pendingRouteIds[route.id] + ' envío(s) pendiente(s)' : '')) +
+            '"><span>' + escapeHtml(route.name) + (route.unavailable ? ' (fuera del catálogo)' : '') + '</span><span class="route-icons" aria-hidden="true">' +
+            (count ? '<svg class="route-checks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+              (count >= 2 ? '<path d="m2 12 4 4L16 6"/><path d="m12 14 2 2L22 8"/>' : '<path d="m5 12 4 4L19 6"/>') + '</svg>' : '') +
+            (count >= 3 ? '<svg class="route-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' : '') +
+            (pending ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' : '') + '</span></button>';
+        }).join('');
+      }
+
+      function openEntryOverlay(routeId, entry) {
+        const route = state.routes.find(function (item) { return item.id === routeId; });
+        const entryRoute = entry && entry.route ? entry.route : route && route.name;
+        if (!entryRoute) return;
+        state.selectedRoute = routeId;
+        state.formEpoch = state.epoch;
+        state.formCompletionDirty = false;
+        state.formComplete = undefined;
+        renderRoutes();
+        state.formRouteName = entryRoute;
+        renderEntryContext();
+        $('mta-input').value = entry ? (entry.mta ?? '') : '';
+        $('mtb-input').value = entry ? (entry.mtb ?? '') : '';
+        $('entry-title').textContent = entry ? 'Editar captura' : 'Registrar cantidades';
+        $('save-entry').textContent = entry ? 'Guardar cambios' : 'Enviar captura';
+        $('edit-hint').classList.toggle('hidden', !entry);
+        $('entry-overlay').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        syncEntryViewport();
+        $('mta-input').focus({ preventScroll: true });
+        if (!state.routeTotals && !state.totalsUnavailable) refreshCapture(true).catch(() => {});
+      }
+
+      function closeEntryOverlay() {
+        if ($('entry-overlay').contains(document.activeElement)) document.activeElement.blur();
+        $('entry-overlay').classList.add('hidden');
+        document.body.style.overflow = '';
+        state.formCompletionDirty = false;
+        state.formComplete = undefined;
+      }
+
+      function renderEntryContext() {
+        const routeTotals = state.routeTotals && state.routeTotals[state.selectedRoute];
+        const totals = state.routeTotals ? (routeTotals || { mta: 0, mtb: 0 }) : null;
+        $('entry-route-name').textContent = (state.formRouteName || '') +
+          (state.selectedLine ? ' · ' + state.selectedLine : '') +
+          (totals ? ' · MTA: ' + totals.mta + ' MTB: ' + totals.mtb + (state.totalsStale ? ' (por actualizar)' : '')
+            : state.totalsUnavailable ? ' · Totales no disponibles' : ' · Consultando totales');
+        renderCompletionControl();
+      }
+
+      function renderCompletionControl() {
+        const pending = queueItems().filter(op => typeof op.payload.complete === 'boolean' && op.payload.epoch === state.epoch &&
+          op.payload.line === state.selectedLine && op.payload.routeId === state.selectedRoute).pop();
+        if (!state.formCompletionDirty) state.formComplete = pending ? pending.payload.complete : (state.completedRouteIds || []).includes(state.selectedRoute);
+        $('route-complete').checked = !!state.formComplete;
+        $('route-complete').disabled = !state.authenticated || !state.captureEnabled || !state.completionAvailable ||
+          !state.selectedRoute || state.formEpoch !== state.epoch || !!pending;
+        $('completion-status').textContent = !state.completionAvailable ? 'Actualiza la implementación para habilitar esta opción.' :
+          pending ? (pending.status === 'error' ? 'Revisa el envío pendiente' : 'Cambio pendiente de guardar') :
+          state.formCompletionDirty ? 'Se guardará al enviar captura' : '';
+      }
+
+      $('route-complete').addEventListener('change', function () {
+        const complete = $('route-complete').checked;
+        if (!state.authenticated || !state.captureEnabled || !state.completionAvailable || state.formEpoch !== state.epoch || !state.selectedRoute) {
+          renderCompletionControl(); return;
+        }
+        state.formComplete = complete;
+        state.formCompletionDirty = true;
+        renderCompletionControl();
+      });
+
+      function syncEntryViewport() {
+        const viewport = window.visualViewport;
+        const overlay = $('entry-overlay');
+        overlay.style.setProperty('--entry-viewport-top', (viewport ? viewport.offsetTop : 0) + 'px');
+        overlay.style.setProperty('--entry-viewport-height', (viewport ? viewport.height : window.innerHeight) + 'px');
+      }
+
+      function renderHistory() {
+        const container = $('history-container');
+        const expanded = new Set(Array.from(container.querySelectorAll('details[open]')).map(el => el.dataset.entryMenu));
+        if (!state.authenticated) {
+          container.innerHTML = '<div class="empty">Ingresa la CaptureKey para consultar el historial.</div>';
+          return;
+        }
+        if (!state.selectedLine) {
+          container.innerHTML = '<div class="empty">Selecciona una línea para consultar sus capturas recientes.</div>';
+          return;
+        }
+        if (!state.history.length) {
+          container.innerHTML = '<div class="empty">Todavía no hay capturas para esta línea.</div>';
+          return;
+        }
+        const rows = state.history.map(function (entry) {
+          const date = new Date(entry.date);
+          const dateText = isNaN(date.getTime()) ? '—' : date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+          const actions = '<details class="row-menu" name="history-actions" data-entry-menu="' + escapeHtml(entry.id) + '"' + (expanded.has(entry.id) ? ' open' : '') + '><summary aria-label="Acciones de la captura de ' + escapeHtml(entry.route) + '" title="Mostrar acciones"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5L8 21H3v-5Z"/><path d="m14 5 5 5"/></svg></summary><div class="actions"><button class="button secondary small" data-edit="' + escapeHtml(entry.id) + '" type="button"' +
+            (state.captureEnabled ? '' : ' disabled') + '>Editar</button>' +
+            '<button class="button danger small" data-delete="' + escapeHtml(entry.id) + '" type="button"' +
+            (state.captureEnabled ? '' : ' disabled') + '>Eliminar</button></div></details>';
+          return '<tr><td>' + escapeHtml(dateText) + '</td><td>' + escapeHtml(entry.line) + '</td><td>' +
+            escapeHtml(entry.route) + '</td><td>' + escapeHtml(entry.mta) + '</td><td>' + escapeHtml(entry.mtb) +
+            '</td><td>' + actions + '</td></tr>';
+        }).join('');
+        container.innerHTML = '<table><thead><tr><th>Hora</th><th>Línea</th><th>Ruta</th><th>MTA</th><th>MTB</th><th aria-label="Acciones"></th></tr></thead><tbody>' + rows + '</tbody></table>';
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, function (character) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character];
+        });
+      }
+
+      function refreshCapture(force = true) { return refreshView('capture', force); }
+      function refreshAdmin(force = true) { return refreshView('admin', force); }
+      function refreshView(view, force) {
+        state.refreshTasks ||= {};
+        const existing = state.refreshTasks[view];
+        if (existing) {
+          existing.again = true; existing.force ||= force;
+          state[view + 'Request']++;
+          return existing.promise;
+        }
+        const task = { again: false, force: force };
+        state.refreshTasks[view] = task;
+        if (view === 'admin') setHistoryLoading(true);
+        task.promise = Promise.resolve().then(async () => {
+          do {
+            const requestedForce = task.force;
+            task.again = false; task.force = false;
+            try { await (view === 'capture' ? loadCapture(requestedForce) : loadAdmin(requestedForce)); }
+            catch (error) { if (!task.again || !state.authenticated) throw error; }
+          } while (task.again && state.authenticated);
+        }).finally(() => {
+          delete state.refreshTasks[view];
+          if (view === 'admin') setHistoryLoading(false);
+        });
+        return task.promise;
+      }
+      async function loadCapture(force) {
+        const request = ++state.captureRequest, token = state.token, line = state.selectedLine;
+        $('capture-sync').textContent = 'Actualizando capturas…';
+        try {
+          const options = { version: force || !state.routeTotals || state.totalsStale ? '' : state.captureVersion };
+          if (state.authenticated) options.line = line;
+          const data = await callServer('getAppData', token, options);
+          if (request !== state.captureRequest || token !== state.token || line !== state.selectedLine) return;
+          applyStatus(data);
+          if (!data.unchanged) renderCapture(data);
+          $('capture-sync').textContent = 'Actualizado · ' + new Date().toLocaleTimeString();
+        } catch (error) {
+          if (token === state.token) {
+            $('capture-sync').textContent = 'No se pudo actualizar. ' + error.message;
+            if (!state.routeTotals) state.totalsUnavailable = true;
+            renderEntryContext();
+            handleSessionError(error);
+          }
+          throw error;
+        }
+      }
+
+      async function loadAdmin(force) {
+        const request = ++state.adminRequest, token = state.token;
+        const query = { page: state.adminPage, line: $('admin-entry-line').value, route: $('admin-entry-route').value, version: force ? '' : state.adminVersion };
+        $('admin-sync').textContent = 'Actualizando panel…';
+        try {
+          const data = await callServer('getAdminDashboard', token, query);
+          if (request !== state.adminRequest || token !== state.token) return;
+          applyStatus(data);
+          if (!data.unchanged) renderAdmin(data);
+          $('admin-sync').textContent = 'Actualizado · ' + new Date().toLocaleTimeString();
+        } catch (error) {
+          if (token === state.token) {
+            $('admin-sync').textContent = 'No se pudo actualizar. ' + error.message;
+            handleSessionError(error);
+          }
+          throw error;
+        }
+      }
+
+      function renderAdminEntries() {
+        const selectedLine = $('admin-entry-line').value;
+        const selectedRoute = $('admin-entry-route').value;
+        const entries = state.adminEntries.filter(function (entry) {
+          return (!selectedLine || entry.line === selectedLine) &&
+            (!selectedRoute || entry.route === selectedRoute);
+        });
+        const container = $('admin-entries-container');
+        if (!entries.length) {
+          container.innerHTML = '<div class="empty">No hay capturas para los filtros seleccionados.</div>';
+          return;
+        }
+        const rows = entries.map(function (entry) {
+          const date = new Date(entry.date);
+          const dateText = isNaN(date.getTime()) ? '—' : date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+          return '<tr><td>' + escapeHtml(dateText) + '</td><td>' + escapeHtml(entry.line) + '</td><td>' + escapeHtml(entry.route) +
+            '</td><td>' + escapeHtml(entry.mta) + '</td><td>' + escapeHtml(entry.mtb) + '</td></tr>';
+        }).join('');
+        container.innerHTML = '<table><thead><tr><th>Hora</th><th>Línea</th><th>Ruta</th>' +
+          '<th>MTA</th><th>MTB</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      }
+
+      function renderAdmin(data) {
+        applyStatus(data);
+        state.adminVersion = data.version;
+        state.adminPage = data.page;
+        state.adminPages = data.pages;
+        $('page-label').textContent = 'Página ' + data.page + ' de ' + data.pages + ' · ' + data.totalEntries + ' registros';
+        $('page-prev').disabled = !!state.refreshTasks?.admin || data.page <= 1;
+        $('page-next').disabled = !!state.refreshTasks?.admin || data.page >= data.pages;
+        state.adminEntries = data.entries;
+        state.captureEnabled = data.captureEnabled;
+        $('capture-toggle').checked = data.captureEnabled;
+        if (!$('capture-key-setting').dataset.dirty) $('capture-key-setting').value = data.captureKey || '';
+        $('capture-paused').classList.toggle('hidden', data.captureEnabled);
+        $('save-entry').disabled = !data.captureEnabled;
+        $('line-select').disabled = !data.captureEnabled;
+        $('mta-input').disabled = !data.captureEnabled;
+        $('mtb-input').disabled = !data.captureEnabled;
+        renderHistory();
+        renderRoutes();
+        $('progress-container').innerHTML = data.lineProgress.length ? '<table><thead><tr><th>Línea</th><th>Rutas completas</th><th>Progreso</th></tr></thead><tbody>' +
+          data.lineProgress.map(function (item) {
+            return '<tr><td>' + escapeHtml(item.line) + '</td><td>' + item.completed + ' / ' + item.total +
+              '</td><td><div class="row"><div class="progress"><span style="width:' + item.percent + '%"></span></div><span>' + item.percent + '%</span></div></td></tr>';
+          }).join('') + '</tbody></table>' : '<div class="empty">No hay líneas disponibles.</div>';
+        $('totals-container').innerHTML = data.routeTotals.length ? '<table><thead><tr><th>Ruta</th><th>Total MTA</th><th>Total MTB</th></tr></thead><tbody>' +
+          data.routeTotals.map(function (item) {
+            return '<tr><td>' + escapeHtml(item.route) + '</td><td>' + item.mta + '</td><td>' + item.mtb + '</td></tr>';
+          }).join('') + '</tbody></table>' : '<div class="empty">No hay capturas registradas.</div>';
+        const selectedLine = $('admin-entry-line').value;
+        const selectedRoute = $('admin-entry-route').value;
+        renderSelect($('admin-entry-line'), 'Todas las líneas', data.entryLines.map(function (line) {
+          return { label: line, value: line };
+        }), selectedLine);
+        renderSelect($('admin-entry-route'), 'Todas las rutas', data.entryRoutes.map(function (route) {
+          return { label: route, value: route };
+        }), selectedRoute);
+        renderAdminEntries();
+        renderAdminLists(data.lines, data.routes);
+      }
+
+      function renderAccessViews() {
+        const isCaptureTab = state.activeTab === 'capture';
+        const isAdmin = state.role === 'admin';
+        $('capture-gate').classList.toggle('hidden', !isCaptureTab || state.authenticated);
+        $('capture-panel').classList.toggle('hidden', !isCaptureTab || !state.authenticated);
+        $('admin-gate').classList.toggle('hidden', isCaptureTab || isAdmin);
+        $('admin-panel').classList.toggle('hidden', isCaptureTab || !isAdmin);
+        $('tabs').querySelectorAll('.tab').forEach(function (button) {
+          button.classList.toggle('active', button.getAttribute('data-tab') === state.activeTab);
+        });
+        const prompt = $('line-prompt');
+        const needsLine = isCaptureTab && state.authenticated && !state.selectedLine;
+        const newlyVisible = needsLine && prompt.classList.contains('hidden');
+        prompt.classList.toggle('hidden', !needsLine);
+        prompt.textContent = state.lines.length
+          ? '¿Qué línea vas a usar? Selecciona una para comenzar.'
+          : 'No hay líneas disponibles. Solicita al administrador que agregue una.';
+        if (newlyVisible && state.lines.length) $('line-select').focus();
+      }
+
+      function trashButton(type, id, name) {
+        return '<button class="button trash-button" data-delete-' + type + '="' + escapeHtml(id) +
+          '" data-name="' + escapeHtml(name) + '" type="button" aria-label="Eliminar ' + escapeHtml(name) +
+          '" title="Eliminar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/>' +
+          '<path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5"/>' +
+          '<path d="M14 11v5"/></svg></button>';
+      }
+
+      function renderAdminLists(lines, routes) {
+        state.catalogItems = { line: lines, route: routes };
+        state.catalogEditing ||= { line: false, route: false };
+        state.catalogSelected ||= { line: [], route: [] };
+        ['line', 'route'].forEach(function (type) {
+          const items = state.catalogItems[type];
+          const editing = state.catalogEditing[type];
+          const selected = state.catalogSelected[type].filter(id => items.some(item => item.id === id));
+          state.catalogSelected[type] = selected;
+          const container = $(type === 'line' ? 'lines-container' : 'routes-container');
+          const label = type === 'line' ? 'Línea' : 'Ruta';
+          const editButton = $('edit-' + type);
+          editButton.textContent = editing ? 'Cancelar' : 'Editar';
+          editButton.setAttribute('aria-pressed', String(editing));
+          editButton.disabled = !items.length && !editing;
+          const toolbar = editing ? '<div class="catalog-toolbar"><button class="button danger" type="button" data-catalog-delete="' + type + '"' + (!selected.length ? ' disabled' : '') + '>Eliminar seleccionadas (' + selected.length + ')</button><span class="muted" role="status">' + selected.length + ' de ' + items.length + ' seleccionadas</span></div>' : '';
+          container.innerHTML = toolbar + (items.length ? '<table><thead><tr>' +
+            (editing ? '<th class="catalog-select"><input type="checkbox" data-catalog-all="' + type + '" aria-label="Seleccionar todas las ' + (type === 'line' ? 'líneas' : 'rutas') + '"' + (selected.length === items.length ? ' checked' : '') + '></th>' : '') +
+            '<th>' + label + '</th></tr></thead><tbody>' + items.map(function (item) {
+              return '<tr' + (selected.includes(item.id) ? ' class="catalog-selected"' : '') + '>' +
+                (editing ? '<td class="catalog-select"><input type="checkbox" data-catalog-item="' + type + '" data-id="' + escapeHtml(item.id) + '" aria-label="Seleccionar ' + escapeHtml(item.name) + '"' + (selected.includes(item.id) ? ' checked' : '') + '></td>' : '') +
+                '<td>' + escapeHtml(item.name) + '</td></tr>';
+            }).join('') + '</tbody></table>' : '<div class="empty">No hay ' + (type === 'line' ? 'líneas' : 'rutas') + ' disponibles.</div>');
+          const all = container.querySelector('[data-catalog-all]');
+          if (all) all.indeterminate = selected.length > 0 && selected.length < items.length;
+        });
+      }
+
+      async function openSession(session, tab) {
+        const previousToken = state.token;
+        const previousRememberedToken = localStorage.getItem('capturaRememberedToken');
+        state.token = session.token;
+        state.username = session.username;
+        state.role = session.role;
+        state.authenticated = true;
+        state.selectedLine = localStorage.getItem('capturaSelectedLine') || session.selectedLine || '';
+        state.activeTab = tab;
+        state.adminRequest++; state.captureRequest++;
+        sessionStorage.setItem('capturaToken', state.token);
+        if (state.role === 'captura') localStorage.setItem('capturaRememberedToken', state.token);
+        armSessionExpiry(session);
+        state.epoch = ''; state.captureVersion = ''; state.adminVersion = '';
+        queueItems().filter(op => op.authError).forEach(op => {
+          op.status = 'queued'; op.error = ''; op.authError = false; op.nextTry = 0; storeOperation(op);
+        });
+        await refreshCapture();
+        if (previousToken && previousToken !== session.token && previousToken !== previousRememberedToken) {
+          await callServer('logout', previousToken);
+        }
+        renderAccessViews();
+      }
+
+      function stopEditing() {
+        const previousLine = state.editing ? state.editing.previousSelectedLine : undefined;
+        state.editing = null;
+        $('mta-input').value = '';
+        $('mtb-input').value = '';
+        $('edit-hint').classList.add('hidden');
+        $('save-entry').textContent = 'Enviar captura';
+        $('line-select').disabled = !state.authenticated || !state.captureEnabled;
+        state.selectedRoute = '';
+        if (previousLine !== undefined) {
+          state.selectedLine = previousLine;
+          $('line-select').value = previousLine;
+        }
+        closeEntryOverlay();
+        renderRoutes();
+      }
+
+      function onlyDigits(input) {
+        input.value = input.value.replace(/\D/g, '').slice(0, 3);
+      }
+
+      $('capture-access-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        try {
+          await runAction(async function () {
+            state.captureClientId = getCaptureClientId();
+            const session = await callServer('authorizeCaptureKey', $('capture-key').value, state.captureClientId);
+            $('capture-key').value = '';
+            await openSession(session, 'capture');
+          }, null, 'Validando acceso y cargando capturas…');
+          showMessage('app-message', 'Captura habilitada.', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('admin-login-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        try {
+          await runAction(async function () {
+            const session = await callServer('login', $('login-user').value, $('login-password').value);
+            $('login-password').value = '';
+            await openSession(session, 'admin');
+            await refreshAdmin();
+          }, null, 'Validando acceso y cargando administración…');
+          showMessage('app-message', 'Sesión de administrador iniciada.', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('logout-button').addEventListener('click', async function () {
+        const token = state.token;
+        clearTimeout(state.adminExpiryTimer);
+        state.adminDeadline = 0;
+        if (localStorage.getItem('capturaRememberedToken') === token) localStorage.removeItem('capturaRememberedToken');
+        state.authenticated = false;
+        state.captureRequest++; state.adminRequest++;
+        try { await callServer('logout', token); } finally {
+          sessionStorage.removeItem('capturaToken');
+          state.token = '';
+          state.username = '';
+          state.role = '';
+          state.authenticated = false;
+          state.history = [];
+          state.routeIdsWithEntries = [];
+          state.completedRouteIds = []; state.completionAvailable = false;
+          state.selectedRoute = '';
+          $('welcome').textContent = 'Captura bloqueada · Ingresa tu CaptureKey para comenzar.';
+          $('logout-button').classList.add('hidden');
+          $('line-select').disabled = true;
+          $('mta-input').disabled = true;
+          $('mtb-input').disabled = true;
+          $('save-entry').disabled = true;
+          closeEntryOverlay();
+          renderRoutes();
+          clearAdminData();
+          state.activeTab = 'capture';
+          renderAccessViews();
+          renderHistory();
+          state.editing = null;
+          $('login-password').value = '';
+          showMessage('app-message', '', '');
+        }
+      });
+
+      $('line-select').addEventListener('change', async function () {
+        state.selectedLine = $('line-select').value;
+        localStorage.setItem('capturaSelectedLine', state.selectedLine);
+        state.selectedRoute = '';
+        state.history = []; state.routeIdsWithEntries = []; state.captureVersion = '';
+        state.completedRouteIds = []; state.completionAvailable = false;
+        state.routeTotals = null;
+        state.totalsUnavailable = false; state.totalsStale = false;
+        renderRoutes(); renderHistory();
+        try {
+          await refreshCapture();
+          showMessage('app-message', '', '');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('entry-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const mta = $('mta-input').value, mtb = $('mtb-input').value;
+        const hasQuantities = mta !== '' || mtb !== '';
+        const sendCompletion = state.completionAvailable && (state.formCompletionDirty || $('route-complete').checked);
+        if (!hasQuantities && !sendCompletion) return;
+        if (!state.captureEnabled || !state.selectedRoute || !state.authenticated) return;
+        if (state.formEpoch !== state.epoch) {
+          showMessage('app-message', 'La jornada cambió. Cierra este formulario y selecciona la ruta de nuevo para capturar en la nueva jornada.', 'warning');
+          return;
+        }
+        const payload = { operationId: newOperationId(), epoch: state.formEpoch, line: state.selectedLine, routeId: state.selectedRoute };
+        if (mta !== '') payload.mta = mta;
+        if (mtb !== '') payload.mtb = mtb;
+        if (sendCompletion) payload.complete = $('route-complete').checked;
+        if (!hasQuantities) payload.kind = 'completion';
+        if (state.editing && hasQuantities) payload.id = state.editing.id;
+        const operation = { owner: state.username, payload: payload, status: 'queued', created: Date.now(), attempts: 0 };
+        try { storeOperation(operation); }
+        catch (error) { showMessage('app-message', 'No se pudo conservar el envío en este dispositivo. El formulario sigue disponible. ' + error.message, 'error'); return; }
+        // Only the submitting form is cleared, synchronously. Server responses never touch a later form.
+        stopEditing(); renderQueue(); renderRoutes(); processQueue();
+      });
+
+      
+
+      $('cancel-edit').addEventListener('click', stopEditing);
+      $('entry-overlay').addEventListener('click', function (event) {
+        if (event.target === $('entry-overlay')) stopEditing();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !$('entry-overlay').classList.contains('hidden')) stopEditing();
+      });
+      [$('mta-input'), $('mtb-input')].forEach(function (input) {
+        input.addEventListener('input', function () { onlyDigits(input); });
+      });
+
+      $('history-container').addEventListener('click', async function (event) {
+        const button = event.target.closest('[data-edit], [data-delete]');
+        if (!button || button.disabled) return;
+        const editId = button.getAttribute('data-edit');
+        const deleteId = button.getAttribute('data-delete');
+        if (editId) {
+          const entry = state.history.find(function (item) { return item.id === editId; });
+          if (!entry) return;
+          state.editing = Object.assign({}, entry, { previousSelectedLine: state.selectedLine });
+          $('line-select').value = entry.line;
+          $('line-select').disabled = true;
+          renderRoutes();
+          openEntryOverlay(entry.routeId, entry);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (deleteId && window.confirm('¿Eliminar esta captura? Esta acción no se puede deshacer.')) {
+          try {
+            await runAction(async function () {
+              await callServer('deleteEntry', state.token, deleteId);
+              await refreshCapture();
+              if (!$('admin-panel').classList.contains('hidden')) await refreshAdmin();
+            }, null, 'Eliminando captura y actualizando el historial…');
+            showMessage('app-message', 'Captura eliminada.', 'success');
+          } catch (error) {
+            showMessage('app-message', error.message, 'error');
+          }
+        }
+      });
+
+      $('route-options').addEventListener('click', function (event) {
+        const button = event.target.closest('[data-route-id]');
+        if (!button || button.disabled) return;
+        openEntryOverlay(button.getAttribute('data-route-id'));
+      });
+
+      $('tabs').addEventListener('click', async function (event) {
+        const tab = event.target.getAttribute('data-tab');
+        if (!tab) return;
+        state.activeTab = tab;
+        state.adminRequest++; state.captureRequest++;
+        renderAccessViews();
+        if (tab === 'capture' && state.authenticated) refreshCapture(false).catch(() => {});
+        else if (tab === 'capture') restoreStoredAccess(true).catch(() => {});
+        if (tab === 'admin' && state.role === 'admin') {
+          try {
+            await runAction(refreshAdmin);
+          } catch (error) {
+            showMessage('app-message', error.message, 'error');
+          }
+        }
+      });
+
+      ['admin-entry-line', 'admin-entry-route'].forEach(function (id) {
+        $(id).addEventListener('change', async function () {
+          state.adminPage = 1;
+          try { await refreshAdmin(); } catch (_) {}
+        });
+      });
+
+      $('capture-toggle').addEventListener('change', async function () {
+        try {
+          await runAction(async function () {
+            await callServer('setCaptureEnabled', state.token, $('capture-toggle').checked);
+            await refreshCapture();
+          }, null, 'Actualizando estado de captura…');
+          showMessage('app-message', $('capture-toggle').checked ? 'La captura está habilitada.' : 'La captura está pausada.', 'success');
+        } catch (error) {
+          $('capture-toggle').checked = ! $('capture-toggle').checked;
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('reset-button').addEventListener('click', async function () {
+        if (!window.confirm('Esto eliminará TODAS las capturas de todos los usuarios. Se conservarán líneas y rutas. ¿Continuar?')) return;
+        if (!window.confirm('Confirma una vez más: la eliminación total no se puede deshacer.')) return;
+        try {
+          await runAction(async function () {
+            await callServer('resetCapture', state.token);
+            state.editing = null;
+            stopEditing();
+            await refreshCapture();
+            await refreshAdmin();
+          }, null, 'Reiniciando captura y actualizando paneles…');
+          showMessage('app-message', 'Se reiniciaron todas las capturas.', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('export-button').addEventListener('click', async function () {
+        try {
+          const csv = await runAction(function () { return callServer('exportEntries', state.token); }, null, 'Preparando totales por ruta…');
+          const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'totales-mta-mtb-por-ruta.csv';
+          link.click();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('line-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        try {
+          await runAction(async function () {
+            const data = await callServer('adminSaveLine', state.token, {
+              id: $('line-id').value, name: $('line-name').value
+            });
+            state.lastCatalogAdded = data.catalogAdded;
+            resetLineForm();
+            await refreshAdmin();
+            await refreshCapture();
+          });
+          showMessage('app-message', 'Se guardaron ' + state.lastCatalogAdded + ' línea(s).', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('route-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        try {
+          await runAction(async function () {
+            const data = await callServer('adminSaveRoute', state.token, {
+              id: $('route-id').value, name: $('route-name').value
+            });
+            state.lastCatalogAdded = data.catalogAdded;
+            resetRouteForm();
+            await refreshAdmin();
+            await refreshCapture();
+          });
+          showMessage('app-message', 'Se guardaron ' + state.lastCatalogAdded + ' ruta(s).', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      $('account-show').addEventListener('change', () => {
+        ['account-current','account-new','account-confirm'].forEach(id => {
+          $(id).type = $('account-show').checked ? 'text' : 'password';
+        });
+      });
+      function clearAccountForm() {
+        $('admin-account-form').reset();
+        ['account-current','account-new','account-confirm'].forEach(id => { $(id).type = 'password'; });
+        showMessage('account-message', '', '');
+      }
+      $('admin-account-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = $('account-save');
+        if (button.disabled) return;
+        const payload = {
+          username: $('account-user').value.trim(), currentPassword: $('account-current').value,
+          newPassword: $('account-new').value, confirmPassword: $('account-confirm').value
+        };
+        if (payload.newPassword !== payload.confirmPassword) {
+          showMessage('account-message', 'Las nuevas contraseñas no coinciden.', 'error'); return;
+        }
+        button.disabled = true;
+        try {
+          const result = await runAction(() => callServer('adminUpdateCredentials', state.token, payload),
+            'account-message', 'Guardando acceso…');
+          clearAccountForm();
+          handleSessionError(new Error('Tu sesión se cerró porque actualizaste el acceso.'));
+          $('login-user').value = result.username;
+          $('login-password').value = '';
+          showMessage('app-message', 'Acceso actualizado. Inicia sesión con tus nuevas credenciales.', 'success');
+          $('login-password').focus();
+        } catch (error) {
+          if (!handleSessionError(error)) showMessage('account-message', error.message, 'error');
+        } finally { button.disabled = false; }
+      });
+
+      $('capture-key-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        try {
+          const data = await runAction(function () {
+            return callServer('adminSaveCaptureKey', state.token, $('capture-key-setting').value);
+          }, null, 'Guardando CaptureKey compartida…');
+          delete $('capture-key-setting').dataset.dirty;
+          await refreshAdmin();
+          showMessage('app-message', 'CaptureKey compartida guardada.', 'success');
+        } catch (error) {
+          showMessage('app-message', error.message, 'error');
+        }
+      });
+
+      function openDeleteConfirmation(type) {
+        const items = state.catalogItems[type].filter(item => state.catalogSelected[type].includes(item.id));
+        if (!items.length) return;
+        state.pendingDelete = { type: type, ids: items.map(item => item.id) };
+        $('confirm-message').textContent = '¿Eliminar ' + items.length + ' ' + (type === 'line' ? 'línea(s)' : 'ruta(s)') +
+          ' del catálogo? ' + items.map(item => item.name).join(', ') + '. Sus capturas anteriores se conservarán.';
+        $('confirm-overlay').classList.remove('hidden');
+        $('confirm-delete').focus();
+      }
+
+      function closeDeleteConfirmation() {
+        state.pendingDelete = null;
+        $('confirm-overlay').classList.add('hidden');
+      }
+
+      ['lines-container', 'routes-container'].forEach(function (containerId) {
+        $(containerId).closest('.card').addEventListener('click', function (event) {
+          const button = event.target.closest('[data-catalog-edit], [data-catalog-delete]');
+          if (!button || button.disabled) return;
+          if (button.dataset.catalogDelete) { openDeleteConfirmation(button.dataset.catalogDelete); return; }
+          const type = button.dataset.catalogEdit;
+          state.catalogEditing[type] = !state.catalogEditing[type];
+          state.catalogSelected[type] = [];
+          renderAdminLists(state.catalogItems.line, state.catalogItems.route);
+          $('edit-' + type).focus();
+        });
+        $(containerId).addEventListener('change', function (event) {
+          const input = event.target.closest('[data-catalog-item], [data-catalog-all]');
+          if (!input) return;
+          const type = input.dataset.catalogItem || input.dataset.catalogAll;
+          if (input.dataset.catalogAll) state.catalogSelected[type] = input.checked ? state.catalogItems[type].map(item => item.id) : [];
+          else {
+            state.catalogSelected[type] = state.catalogSelected[type].filter(id => id !== input.dataset.id);
+            if (input.checked) state.catalogSelected[type].push(input.dataset.id);
+          }
+          const id = input.dataset.id;
+          renderAdminLists(state.catalogItems.line, state.catalogItems.route);
+          const replacement = id ? Array.from($(containerId).querySelectorAll('[data-catalog-item]')).find(el => el.dataset.id === id) : $(containerId).querySelector('[data-catalog-all]');
+          if (replacement) replacement.focus();
+        });
+      });
+
+      $('confirm-cancel').addEventListener('click', closeDeleteConfirmation);
+      $('confirm-overlay').addEventListener('click', function (event) {
+        if (event.target === $('confirm-overlay')) closeDeleteConfirmation();
+      });
+      $('confirm-delete').addEventListener('click', async function () {
+        const pending = state.pendingDelete;
+        if (!pending) return;
+        $('confirm-delete').disabled = true;
+        $('confirm-delete').textContent = 'Eliminando…';
+        try {
+          await runAction(async function () {
+            await callServer('adminDeleteCatalogItems', state.token, pending.type, pending.ids);
+            state.catalogEditing[pending.type] = false;
+            state.catalogSelected[pending.type] = [];
+            closeDeleteConfirmation();
+            await refreshAdmin();
+            await refreshCapture();
+          }, null, 'Eliminando ' + (pending.type === 'line' ? 'línea…' : 'ruta…'));
+          showMessage('app-message', 'Selección eliminada del catálogo. El historial se conservó.', 'success');
+        } catch (error) {
+          closeDeleteConfirmation();
+          showMessage('app-message', error.message, 'error');
+        } finally {
+          $('confirm-delete').disabled = false;
+          $('confirm-delete').textContent = 'Eliminar';
+        }
+      });
+
+      function resetLineForm() {
+        $('line-form').reset();
+        $('line-id').value = '';
+      }
+      function resetRouteForm() {
+        $('route-form').reset();
+        $('route-id').value = '';
+      }
+
+      function clearAdminData() {
+        clearAccountForm();
+        state.catalogItems = { line: [], route: [] };
+        state.catalogEditing = { line: false, route: false };
+        state.catalogSelected = { line: [], route: [] };
+        ['progress-container', 'totals-container', 'lines-container', 'routes-container'].forEach(function (id) {
+          $(id).textContent = '';
+        });
+        state.adminEntries = [];
+        $('admin-entries-container').textContent = '';
+        $('capture-toggle').checked = false;
+        $('capture-key-setting').value = '';
+        resetLineForm();
+        resetRouteForm();
+      }
+
+      (async function restoreSession() {
+        await restoreStoredAccess();
+      })();
+
+      async function restoreStoredAccess(captureOnly = false) {
+        const tokens = Array.from(new Set([
+          captureOnly ? '' : sessionStorage.getItem('capturaToken'), localStorage.getItem('capturaRememberedToken')
+        ].filter(Boolean)));
+        if (!tokens.length) return;
+        setLoading(true, 'Restaurando sesión y cargando información…');
+        try {
+          for (const token of tokens) {
+            state.token = token;
+            try {
+              const data = await callServer('getAppData', token, { line: localStorage.getItem('capturaSelectedLine') || '' });
+              if (token !== state.token) return;
+              state.username = data.username;
+              state.role = data.role;
+              sessionStorage.setItem('capturaToken', token);
+              if (data.role === 'captura') localStorage.setItem('capturaRememberedToken', token);
+              renderCapture(data);
+              if (state.role === 'admin' && state.activeTab === 'admin') await refreshAdmin();
+              return;
+            } catch (error) {
+              if (token !== state.token) return;
+              if (!handleSessionError(error)) {
+                state.token = '';
+                showMessage('app-message', 'No se pudo restaurar el acceso. ' + error.message, 'warning');
+                return;
+              }
+            }
+          }
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      let pollTimer, pollBusy = false, pollFailures = 0;
+      function schedulePoll(delay) {
+        clearTimeout(pollTimer);
+        pollTimer = setTimeout(poll, delay);
+      }
+      async function poll() {
+        expireAdminIfNeeded();
+        if (pollBusy) return;
+        pollBusy = true;
+        try {
+          if (!document.hidden && state.authenticated && !state.actionCount && navigator.onLine) {
+            if (state.activeTab === 'admin' && state.role === 'admin') await refreshAdmin(false);
+            else if (state.activeTab === 'capture') await refreshCapture(false);
+            processQueue(); pollFailures = 0;
+          }
+        } catch (_) { pollFailures = Math.min(pollFailures + 1, 4); }
+        finally {
+          pollBusy = false;
+          const idle = Date.now() - state.lastInteraction > 180000;
+          schedulePoll((pollFailures ? Math.min(120000, 15000 * 2 ** pollFailures) : idle ? 5000 : 1000) + Math.random() * 200);
+        }
+      }
+      ['pointerdown', 'keydown'].forEach(name => document.addEventListener(name, () => { state.lastInteraction = Date.now(); }, { passive: true }));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) { expireAdminIfNeeded(); schedulePoll(300); } else clearTimeout(pollTimer); });
+      window.addEventListener('online', () => { schedulePoll(300); processQueue(); });
+      window.addEventListener('storage', () => { renderQueue(); renderRoutes(); processQueue(); });
+      $('capture-key-setting').addEventListener('input', () => { $('capture-key-setting').dataset.dirty = 'true'; });
+      function setHistoryLoading(loading) {
+        $('history-page-loading').classList.toggle('hidden', !loading);
+        $('admin-entries-container').setAttribute('aria-busy', String(loading));
+        $('page-prev').disabled = loading || state.adminPage <= 1;
+        $('page-next').disabled = loading || state.adminPage >= state.adminPages;
+        if (loading) $('history-page-error').textContent = '';
+      }
+      async function changeHistoryPage(delta) {
+        if (state.refreshTasks?.admin) return;
+        const previousPage = state.adminPage;
+        state.adminPage = Math.max(1, Math.min(state.adminPages, previousPage + delta));
+        try { await refreshAdmin(); }
+        catch (_) {
+          state.adminPage = previousPage;
+          setHistoryLoading(false);
+          $('history-page-error').textContent = 'No se pudo cargar la página. Intenta nuevamente.';
+        }
+      }
+      $('page-prev').addEventListener('click', () => changeHistoryPage(-1));
+      $('page-next').addEventListener('click', () => changeHistoryPage(1));
+      schedulePoll(1000);
+
+      function applyCaptureControls() {
+        $('line-select').disabled = !state.authenticated || !state.captureEnabled || !!state.editing;
+        $('save-entry').disabled = !state.authenticated || !state.captureEnabled;
+        $('mta-input').disabled = !state.authenticated;
+        $('mtb-input').disabled = !state.authenticated;
+        renderCompletionControl();
+      }
+      function applyStatus(data) {
+        armSessionExpiry(data);
+        if (data.epoch) state.epoch = data.epoch;
+        if (state.epoch) {
+          queueItems().filter(op => op.payload.epoch !== state.epoch).forEach(op => {
+            localStorage.removeItem(operationKey(op));
+          });
+        }
+        state.captureEnabled = data.captureEnabled;
+        $('capture-paused').classList.toggle('hidden', data.captureEnabled);
+        $('capture-toggle').checked = data.captureEnabled;
+        applyCaptureControls(); renderQueue();
+      }
+      function handleSessionError(error) {
+        if (!/sesión|CaptureKey|cuenta|Esta sesión/i.test(error.message)) return false;
+        clearTimeout(state.adminExpiryTimer);
+        state.adminDeadline = 0;
+        if (localStorage.getItem('capturaRememberedToken') === state.token) localStorage.removeItem('capturaRememberedToken');
+        state.authenticated = false; state.token = ''; state.role = '';
+        state.captureRequest++; state.adminRequest++;
+        sessionStorage.removeItem('capturaToken');
+        clearAdminData();
+        closeEntryOverlay(); renderAccessViews(); applyCaptureControls();
+        showMessage('app-message', error.message + ' Los envíos pendientes permanecen en este dispositivo.', 'warning');
+        return true;
+      }
+      function armSessionExpiry(data) {
+        if (state.role !== 'admin') {
+          clearTimeout(state.adminExpiryTimer); state.adminDeadline = 0; return;
+        }
+        const expiresAt = data.sessionExpiresAt || data.expiresAt;
+        if (!Number.isFinite(expiresAt) || !Number.isFinite(data.serverNow)) return;
+        const remaining = Math.max(0, expiresAt - data.serverNow);
+        state.adminDeadline = performance.now() + remaining;
+        clearTimeout(state.adminExpiryTimer);
+        state.adminExpiryTimer = setTimeout(expireAdminIfNeeded, remaining + 1);
+      }
+      function expireAdminIfNeeded() {
+        if (state.role !== 'admin' || !state.adminDeadline || performance.now() < state.adminDeadline) return false;
+        handleSessionError(new Error('Tu sesión de administrador llegó a las 8 horas. Inicia sesión nuevamente.'));
+        return true;
+      }
+      function operationKey(op) { return 'capturaQueue:v2:' + encodeURIComponent(op.owner) + ':' + op.payload.operationId; }
+      function retryLegacyReceiptErrors() {
+        queueItems().filter(op => op.status === 'error' &&
+          /Identificador de envío reutilizado/.test(op.error || '') && op.receiptCheckVersion !== 1
+        ).forEach(op => {
+          op.receiptCheckVersion = 1;
+          op.status = 'queued'; op.error = ''; op.nextTry = 0;
+          storeOperation(op);
+        });
+      }
+      function storeOperation(op) {
+        // A late failure must not recreate an operation already removed by a reset.
+        if (state.epoch && op.owner === state.username && op.payload.epoch !== state.epoch) {
+          localStorage.removeItem(operationKey(op));
+          return;
+        }
+        localStorage.setItem(operationKey(op), JSON.stringify(op));
+      }
+      function queueItems() {
+        if (!state.username) return [];
+        const prefix = 'capturaQueue:v2:' + encodeURIComponent(state.username) + ':';
+        const items = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(prefix)) {
+            try { const op = JSON.parse(localStorage.getItem(key)); if (op && op.payload && op.owner === state.username) items.push(op); } catch (_) {}
+          }
+        }
+        return items.sort((a,b) => a.created - b.created);
+      }
+      function updatePendingRoutes() {
+        state.pendingRouteIds = {};
+        queueItems().filter(op => op.payload.line === state.selectedLine && op.payload.epoch === state.epoch).forEach(op => {
+          state.pendingRouteIds[op.payload.routeId] = (state.pendingRouteIds[op.payload.routeId] || 0) + 1;
+        });
+      }
+      function renderQueue() {
+        const items = queueItems();
+        $('queue-panel').classList.toggle('hidden', !items.length);
+        $('queue-count').textContent = '(' + items.length + ')';
+        if (!items.length) $('queue-panel').open = false;
+        $('queue-list').innerHTML = items.map(op => {
+          const stale = state.epoch && op.payload.epoch !== state.epoch;
+          const route = state.routes.find(r => r.id === op.payload.routeId);
+          const label = stale ? 'Jornada anterior: no se enviará' : op.error || (!navigator.onLine ? 'Sin conexión: pendiente' : !state.captureEnabled ? 'Esperando reactivación' : op.status === 'sending' ? 'Enviando…' : 'Pendiente');
+          const description = op.payload.kind === 'completion' ? (op.payload.complete ? 'Marcar Ruta Completa' : 'Quitar marca de Ruta Completa') :
+            'MTA: ' + (op.payload.mta ?? '—') + ' · MTB: ' + (op.payload.mtb ?? '—');
+          return '<div class="queue-item"><div class="queue-description"><strong>' + escapeHtml(op.payload.line + ' · ' + (route ? route.name : op.payload.routeId)) + '</strong><small>' + escapeHtml(description) + '</small><small>' + escapeHtml(label) + '</small></div><div class="actions">' +
+            (!stale && op.status === 'error' ? '<button class="button secondary" data-retry="' + op.payload.operationId + '">Reintentar</button>' : '') +
+            '<button class="button secondary" data-discard="' + op.payload.operationId + '"' + (state.queueRunning ? ' disabled' : '') + '>Descartar</button></div></div>';
+        }).join('');
+        renderCompletionControl();
+      }
+      let queueTimer;
+      async function processQueue() {
+        if (state.queueRunning || !state.authenticated) return;
+        if (navigator.locks) {
+          return navigator.locks.request('captura-send:' + state.username, { ifAvailable: true }, lock => lock ? drainQueue() : undefined);
+        }
+        return drainQueue();
+      }
+      async function drainQueue() {
+        if (state.queueRunning || !state.authenticated || !state.captureEnabled || !state.epoch || !navigator.onLine) return;
+        state.queueRunning = true;
+        const token = state.token;
+        let saved = false;
+        try {
+          while (token === state.token && state.authenticated && state.captureEnabled && navigator.onLine) {
+            const op = queueItems().find(item => item.status !== 'error' && item.payload.epoch === state.epoch && (!item.nextTry || item.nextTry <= Date.now()));
+            if (!op) break;
+            op.status = 'sending'; op.error = ''; storeOperation(op); renderQueue();
+            try {
+              state.captureRequest++; state.adminRequest++;
+              const result = await callServer('saveEntry', token, op.payload);
+              localStorage.removeItem(operationKey(op));
+              if (token !== state.token) break;
+              saved = true;
+              state.captureRequest++; state.adminRequest++;
+              if (typeof result.complete === 'boolean' && result.epoch === state.epoch && result.line === state.selectedLine) {
+                state.completedRouteIds = (state.completedRouteIds || []).filter(id => id !== result.routeId);
+                if (result.complete) state.completedRouteIds.push(result.routeId);
+                renderCompletionControl();
+              }
+              if (result.entry && result.epoch === state.epoch && result.entry.line === state.selectedLine) {
+                state.totalsStale = true;
+                renderEntryContext();
+                const index = state.history.findIndex(entry => entry.id === result.entry.id);
+                if (index >= 0) state.history[index] = result.entry;
+                else { state.history.unshift(result.entry); state.history = state.history.slice(0,30); }
+                if (!state.routeIdsWithEntries.includes(result.entry.routeId)) state.routeIdsWithEntries.push(result.entry.routeId);
+                renderHistory();
+              }
+              state.captureVersion = ''; state.adminVersion = '';
+            } catch (error) {
+              op.attempts = (op.attempts || 0) + 1; op.error = error.message;
+              const permanent = /VALIDATION:|RESET:|sesión|CaptureKey|cuenta|acceso/i.test(error.message);
+              op.authError = /sesión|CaptureKey|cuenta|acceso/i.test(error.message);
+              op.status = permanent ? 'error' : 'queued';
+              op.nextTry = Date.now() + Math.min(120000, 2000 * 2 ** Math.min(op.attempts,6)) + Math.random() * 1500;
+              if (/RESET:/.test(error.message)) localStorage.removeItem(operationKey(op));
+              else storeOperation(op);
+              if (/PAUSED:/.test(error.message)) state.captureEnabled = false;
+              if (token !== state.token) break;
+              if (op.authError) { handleSessionError(error); break; }
+              if (!permanent) break;
+            }
+            renderQueue(); renderRoutes();
+          }
+        } catch (error) {
+          showMessage('app-message', 'No se pudo actualizar la cola local: ' + error.message, 'error');
+        } finally {
+          state.queueRunning = false; renderQueue(); renderRoutes(); applyCaptureControls();
+          if (saved && token === state.token && state.authenticated && state.activeTab === 'capture') {
+            refreshCapture(false).catch(() => {});
+          }
+          clearTimeout(queueTimer);
+          if (queueItems().some(op => op.status !== 'error' && op.payload.epoch === state.epoch)) queueTimer = setTimeout(processQueue, 5000);
+        }
+      }
+      $('queue-list').addEventListener('click', event => {
+        const button = event.target.closest('[data-retry], [data-discard]');
+        if (!button || button.disabled) return;
+        const id = button.dataset.retry || button.dataset.discard;
+        const op = queueItems().find(item => item.payload.operationId === id);
+        if (!op) return;
+        if (button.dataset.discard) {
+          if (!confirm('¿Descartar este pendiente local? Si el servidor ya lo recibió, su captura no se elimina.')) return;
+          localStorage.removeItem(operationKey(op));
+        } else { op.status = 'queued'; op.error = ''; op.nextTry = 0; storeOperation(op); }
+        renderQueue(); renderRoutes(); processQueue();
+      });
+      window.addEventListener('resize', syncEntryViewport);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncEntryViewport);
+        window.visualViewport.addEventListener('scroll', syncEntryViewport);
+      }
+      
+
+      </script>
+  </body>
+</html>
